@@ -7,6 +7,13 @@ import (
 	"github.com/slang/lexer"
 )
 
+//New returns a new REPL with default values
+func New() *REPL {
+	return &REPL{
+		lexer.Lexer{},
+	}
+}
+
 //REPL represents the repl component and provides a state for the channel
 type REPL struct {
 	lexer.Lexer
@@ -39,8 +46,11 @@ func (r REPL) read() (string, error) {
 }
 
 func (r REPL) eval(in string) (string, error) {
-
-	return "", nil
+	_, err := r.Tokenize(in)
+	if err != nil {
+		return "", err
+	}
+	return in, nil
 }
 
 func (r REPL) print(out string) error {

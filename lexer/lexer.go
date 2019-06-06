@@ -1,44 +1,76 @@
 //Package lexer implements a lexer for slang
 package lexer
 
-import "bytes"
+import "fmt"
 
-//TokenType represents a both a class and a lexer state
+//LexemeType represents a both a class and a lexer state
+type LexemeType = int
+
+//TokenType represents the final token type
 type TokenType = int
 
 const (
-	//UNSPECIFIED is the default token type
-	UNSPECIFIED TokenType = iota
-	//IDENTIFIER are name bindings that resolve to values
-	IDENTIFIER TokenType = iota
-	//LITERAL resolves to values directly
-	LITERAL TokenType = iota
-	//SEPERATOR is a paren
-	SEPERATOR TokenType = iota
+	//unspecified is the default token type
+	unspecified LexemeType = iota
+	//identifier starts with an alphabetic character
+	identifier LexemeType = iota
+	//leftSeparator is a sequence of left parens only
+	leftSeparator LexemeType = iota
+	//rightSeparator is a sequence of right parens only
+	rightSeparator LexemeType = iota
+	//stringLiteral starts and ends with a quote
+	stringLiteral LexemeType = iota
+	//numberLiteral starts with a digit
+	numberLiteral LexemeType = iota
 )
 
-//Lexer holds binds to state and methods for the lexer
+const (
+	//Invalid is the default token type
+	Invalid TokenType = iota
+	//Keyword ::= “add” | “sub” | “mul” | “div”
+	Keyword TokenType = iota
+	//Variable ::= <any identifier not in Keyword>
+	Variable TokenType = iota
+	//LeftParen ::= "("
+	LeftParen TokenType = iota
+	//RightParen ::= ")"
+	RightParen TokenType = iota
+	//String ::= <any stringLiteral>
+	String TokenType = iota
+	//Integer ::= "0"..."9" | <Integer> + "0"..."9"
+	Integer TokenType = iota
+	//Float ::= <integer> + "." + <integer>
+	Float TokenType = iota
+)
+
+//Lexer holds binds to methods for the lexer
 type Lexer struct {
-	state TokenType
+	scanState LexemeType
 }
 
-//Token is the final form of a lexemes
+type lexeme struct {
+	typ LexemeType
+	str string
+}
+
+//Token is the final product of the lexer and binds a type to a string value
 type Token struct {
-	//Type is the type of the token
-	Type TokenType
-	//String holds the actual munched substring
-	String string
+	Typ TokenType
+	Str string
+}
+
+func (l *Lexer) scan(in string) ([]lexeme, error) {
+	for _, c := range in {
+		fmt.Println(c)
+	}
+	return nil, nil
 }
 
 //Tokenize tokenizes a string, producing a list of tokens
-func (l Lexer) Tokenize(s string) ([]Token, error) {
-	var (
-		tok []Token
-		buf bytes.Buffer
-	)
-
-	for _, c := range s {
-		buf.WriteRune(c)
+func (l Lexer) Tokenize(in string) ([]Token, error) {
+	lex, err := l.scan(in)
+	if err != nil {
+		return nil, err
 	}
-	return tok, nil
+	return l.evaluate(lex)
 }

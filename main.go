@@ -1,6 +1,8 @@
 package main
 
-import ()
+import "github.com/slang/repl"
 
 func main() {
+	r := repl.New()
+	r.Run()
 }
