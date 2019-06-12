@@ -22,10 +22,12 @@ const (
 	leftSeparator LexemeType = iota
 	//rightSeparator is a sequence of right parens only
 	rightSeparator LexemeType = iota
+	//stringLiteral starts and ends with a quote
+	stringLiteral LexemeType = iota
 	//numberLiteral starts with a digit
 	numberLiteral LexemeType = iota
-	//operator starts with a symbol that isn't a paren, letter or number
-	operator LexemeType = iota
+	//decimalLiterals are numbers with a single decimal
+	decimalLiteral LexemeType = iota
 )
 
 const (
@@ -69,17 +71,14 @@ func (l *Lexer) scan(in string) ([]lexeme, error) {
 		out   []lexeme
 	)
 
-	fmt.Printf("scan in %s", in)
-	fmt.Println(seq)
-
 	var i int
 	for r, _, err := seq.ReadRune(); err != nil; r, _, err = seq.ReadRune() {
-		fmt.Println(r)
 		switch {
 		case unicode.IsSpace(r):
 			switch state {
 			case unspecified:
-			case identifier, leftSeparator, rightSeparator, numberLiteral, operator:
+			case identifier | leftSeparator | rightSeparator |
+				numberLiteral | decimalLiteral:
 				out = append(out, lexeme{typ: state, str: buf.String()})
 				buf.Reset()
 				state = unspecified
@@ -91,7 +90,7 @@ func (l *Lexer) scan(in string) ([]lexeme, error) {
 			case unspecified:
 				state = identifier
 				fallthrough
-			case identifier:
+			case identifier | stringLiteral:
 				buf.WriteRune(r)
 			default:
 				return nil, fmt.Errorf("unexpected letter %q at index %d", r, i)
@@ -101,17 +100,28 @@ func (l *Lexer) scan(in string) ([]lexeme, error) {
 			case unspecified:
 				state = numberLiteral
 				fallthrough
-			case identifier, numberLiteral:
+			case identifier | stringLiteral |
+				numberLiteral | decimalLiteral:
 				buf.WriteRune(r)
 			default:
 				return nil, fmt.Errorf("unexpected number %q at index %d", r, i)
+			}
+		case r == '.':
+			switch state {
+			case numberLiteral:
+				state = decimalLiteral
+				fallthrough
+			case stringLiteral | decimalLiteral:
+				buf.WriteRune(r)
+			default:
+				return nil, fmt.Errorf("unexpected '.' at index %d", i)
 			}
 		case r == '(':
 			switch state {
 			case unspecified:
 				state = leftSeparator
 				fallthrough
-			case leftSeparator:
+			case leftSeparator | stringLiteral:
 				buf.WriteRune(r)
 			default:
 				return nil, fmt.Errorf("unexpected left paren at index %d", i)
@@ -121,41 +131,31 @@ func (l *Lexer) scan(in string) ([]lexeme, error) {
 			case unspecified:
 				state = rightSeparator
 				fallthrough
-			case rightSeparator:
+			case rightSeparator | stringLiteral:
 				buf.WriteRune(r)
 			default:
 				return nil, fmt.Errorf("unexpected right paren at index %d", i)
 			}
-		case unicode.IsSymbol(r) || unicode.IsPunct(r):
-			switch r {
-			case '.', '+', '-', '*', '/', '%', '=', '&', '|', '^', '!':
-				switch state {
-				case unspecified:
-					state = operator
-					fallthrough
-				case operator:
-					buf.WriteRune(r)
-				default:
-					return nil, fmt.Errorf("unexpected symbol %q at index %d", r, i)
-				}
-			default:
-				return nil, fmt.Errorf("unrecognized symbol %q at index %d", r, i)
+		case r == '"':
+			switch state {
+			case unspecified:
+				state = stringLiteral
+			case stringLiteral:
+
 			}
 		default:
 			return nil, fmt.Errorf("encountered invalid character %q at index %d", r, i)
 		}
 		i++
 	}
-	return out, nil
+	return nil, nil
 }
 
 //Tokenize tokenizes a string, producing a list of tokens
 func (l Lexer) Tokenize(in string) ([]Token, error) {
-	fmt.Printf("tokenize %s\n", in)
 	lex, err := l.scan(in)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(lex)
 	return l.evaluate(lex)
 }
