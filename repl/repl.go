@@ -26,6 +26,7 @@ func (r REPL) Run() error {
 		if err != nil {
 			return err
 		}
+		fmt.Println(in)
 
 		out, err := r.eval(in)
 		if err != nil {
@@ -46,10 +47,11 @@ func (r REPL) read() (string, error) {
 }
 
 func (r REPL) eval(in string) (string, error) {
-	_, err := r.Tokenize(in)
+	tok, err := r.Tokenize(in)
 	if err != nil {
 		return "", err
 	}
+	fmt.Println(tok)
 	return in, nil
 }
 
