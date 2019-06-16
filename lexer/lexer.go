@@ -63,18 +63,16 @@ type Token struct {
 
 func (l *Lexer) scan(in string) ([]lexeme, error) {
 	var (
-		seq   = bytes.NewBufferString(in)
 		buf   bytes.Buffer
 		state LexemeType
 		out   []lexeme
 	)
 
-	fmt.Printf("scan in %s", in)
-	fmt.Println(seq)
+	seq := bytes.NewBufferString(in)
+	fmt.Printf("processing sequence: %q\n", seq.String())
 
 	var i int
-	for r, _, err := seq.ReadRune(); err != nil; r, _, err = seq.ReadRune() {
-		fmt.Println(r)
+	for r, _, err := seq.ReadRune(); err == nil; r, _, err = seq.ReadRune() {
 		switch {
 		case unicode.IsSpace(r):
 			switch state {
@@ -128,7 +126,7 @@ func (l *Lexer) scan(in string) ([]lexeme, error) {
 			}
 		case unicode.IsSymbol(r) || unicode.IsPunct(r):
 			switch r {
-			case '.', '+', '-', '*', '/', '%', '=', '&', '|', '^', '!':
+			case '.', '+', '-', '*', '/', '%', '=', '&', '|', '^', '!', '<', '>':
 				switch state {
 				case unspecified:
 					state = operator

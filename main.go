@@ -1,8 +1,13 @@
 package main
 
-import "github.com/slang/repl"
+import (
+	"fmt"
+
+	"github.com/slang/repl"
+)
 
 func main() {
 	r := repl.New()
-	r.Run()
+	err := r.Run()
+	fmt.Printf("error in main: %q\n", err)
 }
