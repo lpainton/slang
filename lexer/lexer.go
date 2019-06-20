@@ -7,11 +7,8 @@ import (
 	"unicode"
 )
 
-//LexemeType represents a both a class and a lexer state
+//LexemeType represents both a class and a lexer state
 type LexemeType = int
-
-//TokenType represents the final token type
-type TokenType = int
 
 const (
 	//unspecified is the default token type
@@ -28,25 +25,6 @@ const (
 	operator LexemeType = iota
 )
 
-const (
-	//Invalid is the default token type
-	Invalid TokenType = iota
-	//Keyword ::= “add” | “sub” | “mul” | “div”
-	Keyword TokenType = iota
-	//Variable ::= <any identifier not in Keyword>
-	Variable TokenType = iota
-	//LeftParen ::= "("
-	LeftParen TokenType = iota
-	//RightParen ::= ")"
-	RightParen TokenType = iota
-	//String ::= <any stringLiteral>
-	String TokenType = iota
-	//Integer ::= "0"..."9" | <Integer> + "0"..."9"
-	Integer TokenType = iota
-	//Float ::= <integer> + "." + <integer>
-	Float TokenType = iota
-)
-
 //Lexer holds binds to methods for the lexer
 type Lexer struct{}
 
@@ -55,13 +33,7 @@ type lexeme struct {
 	str string
 }
 
-//Token is the final product of the lexer and binds a type to a string value
-type Token struct {
-	Typ TokenType
-	Str string
-}
-
-func (l *Lexer) scan(in string) ([]lexeme, error) {
+func scan(in string) ([]lexeme, error) {
 	var (
 		buf   bytes.Buffer
 		state LexemeType
@@ -150,10 +122,10 @@ func (l *Lexer) scan(in string) ([]lexeme, error) {
 //Tokenize tokenizes a string, producing a list of tokens
 func (l Lexer) Tokenize(in string) ([]Token, error) {
 	fmt.Printf("tokenize %s\n", in)
-	lex, err := l.scan(in)
+	lex, err := scan(in)
 	if err != nil {
 		return nil, err
 	}
 	fmt.Println(lex)
-	return l.evaluate(lex)
+	return evaluate(lex)
 }
